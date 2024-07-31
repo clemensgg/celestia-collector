@@ -1,24 +1,17 @@
 #!/bin/bash
-# Celestia Collector installation script.
+# nubit Collector installation script.
 #
 # Usage:
-# . <(wget -qO- sh.f5nodes.com) celestia-collector -y
+# . <(wget -qO- sh.f5nodes.com) nubit-collector -y
+
+INFLUX_TARGET_TOKEN=""
+INFLUX_TARGET_URL=""
 
 echo "Select chain:"
-select chain in "mainnet" "mocha" "arabica"; do
+select chain in "testnet"; do # TODO: add "mainnet" when ready
     case $chain in
-        mainnet)
-            endpoint="https://otel.celestia.observer"
-            echo "Chain: $chain"
-            break
-            ;;
-        mocha)
-            endpoint="https://otel.celestia-mocha.com"
-            echo "Chain: $chain"
-            break
-            ;;
-        arabica)
-            endpoint="https://otel.arabica.celestia.observer"
+        testnet)
+            endpoint="otel.nubit-alphatestnet-1.com:4318"
             echo "Chain: $chain"
             break
             ;;
@@ -69,7 +62,7 @@ exporters:
     endpoint: $endpoint
   prometheus:
     endpoint: "0.0.0.0:8889"
-    namespace: celestia
+    namespace: nubit
     send_timestamps: true
     metric_expiration: 180m
     enable_open_metrics: true
@@ -93,44 +86,45 @@ sudo systemctl restart otelcol-contrib
 
 # Install Telegraf
 
-wget https://dl.influxdata.com/telegraf/releases/telegraf_1.29.4-1_amd64.deb
-sudo dpkg -i telegraf_1.29.4-1_amd64.deb
-rm telegraf_1.29.4-1_amd64.deb
-telegraf --version
+# TODO: activate when influxdb infra is up
 
-cat <<EOF | sudo tee /etc/telegraf/telegraf.conf
-[agent]
-  hostname = "$nodename-$chain-$node_type"
-  interval = "15s"
-  flush_interval = "15s"
-  round_interval = true
+# wget https://dl.influxdata.com/telegraf/releases/telegraf_1.29.4-1_amd64.deb
+# sudo dpkg -i telegraf_1.29.4-1_amd64.deb
+# rm telegraf_1.29.4-1_amd64.deb
+# telegraf --version
 
-[[inputs.cpu]]
-    percpu = true
-    totalcpu = true
-    collect_cpu_time = false
-    report_active = false
-[[inputs.disk]]
-    ignore_fs = ["devtmpfs", "devfs"]
-[[inputs.mem]]
-[[inputs.system]]
-[[inputs.swap]]
-[[inputs.netstat]]
-[[inputs.processes]]
-[[inputs.kernel]]
-[[inputs.diskio]]
+# cat <<EOF | sudo tee /etc/telegraf/telegraf.conf
+# [agent]
+#   hostname = "$nodename-$chain-$node_type"
+#   interval = "15s"
+#   flush_interval = "15s"
+#   round_interval = true
 
-[[inputs.prometheus]]
-  urls = ["http://localhost:8889/metrics"]
+# [[inputs.cpu]]
+#     percpu = true
+#     totalcpu = true
+#     collect_cpu_time = false
+#     report_active = false
+# [[inputs.disk]]
+#     ignore_fs = ["devtmpfs", "devfs"]
+# [[inputs.mem]]
+# [[inputs.system]]
+# [[inputs.swap]]
+# [[inputs.netstat]]
+# [[inputs.processes]]
+# [[inputs.kernel]]
+# [[inputs.diskio]]
 
-[[outputs.influxdb_v2]]
-  urls = ["https://celestia-metrics.f5nodes.com"]
-  token = "TUM74_V-GQACI_LtmCIZ_mNwX1OXk8uMWCT5R0r5CUepsZNb2Qbefaf45G2Me1XRcHGZ5Pr9NhPMQ80LZx2Gow=="
-  organization = "celestia-community"
-  bucket = "celestia-community-metrics"
-EOF
+# [[inputs.prometheus]]
+#   urls = ["http://localhost:8889/metrics"]
+
+# [[outputs.influxdb_v2]]
+#   urls = ["$INFLUX_TARGET_URL"]
+#   token = "$INFLUX_TARGET_TOKEN"
+#   organization = "nubit-community"
+#   bucket = "nubit-community-metrics"
+# EOF
 
 sudo systemctl start telegraf
 
-echo -e "\nCelestia Collector Monitoring Tool succesfully installed and running"
-echo -e "To view your metrics visit celestia.f5nodes.com\n"
+echo -e "\nnubit Collector Monitoring Tool succesfully installed and running"
